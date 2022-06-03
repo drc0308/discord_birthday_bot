@@ -1,0 +1,5 @@
+/venv
+*.db
+secret_token.txt
+rasp_ipaddress.txt
+*.log
