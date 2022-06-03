@@ -110,7 +110,7 @@ async def handle_bday_add(ctx):
         return
     else:
         insert_bday(res)
-        await ctx.send(f"Bday recorded for {res.user} as {res.date}")
+        await ctx.send(f"Bday recorded for {res.username} as {res.date}")
 
 @bot.command(name='bday-delete', help='Delete your submitted score')
 async def handle_bday_delete(ctx):
