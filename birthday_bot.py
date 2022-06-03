@@ -112,14 +112,14 @@ async def handle_bday_add(ctx):
         insert_bday(res)
         await ctx.send(f"Bday recorded for {res.username} as {res.date}")
 
-@bot.command(name='bday-delete', help='Delete your submitted score')
+@bot.command(name='bday-delete', help='Delete your submitted birthday')
 async def handle_bday_delete(ctx):
     bday = BirthdayEntry()
     bday.userid = str(ctx.message.author.id)
     delete_bday(bday)
     await ctx.send(f"Birthday deleted for {bday.user} on {bday.date}")
 
-@bot.command(name='bday-list', help='Delete your submitted score')
+@bot.command(name='bday-list', help='See all channel birthdays')
 async def handle_bday_list(ctx):
     bdays = get_all_bdays()
     bday_list_string = ""
