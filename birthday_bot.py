@@ -36,10 +36,10 @@ class BdayReminder(commands.Cog):
     @staticmethod
     def get_announcements_chan_id() -> id:
         for chan in bot.get_all_channels():
-            if chan.name == 'dan-bot-test-land':
+            if chan.name == 'announcements':
                 return chan
 
-    @tasks.loop(seconds=1.0)
+    @tasks.loop(hours=24.0)
     async def check_for_birthdays(self):
         print('looping')
         chan = self.get_announcements_chan_id()
