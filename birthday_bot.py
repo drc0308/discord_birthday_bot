@@ -41,7 +41,6 @@ class BdayReminder(commands.Cog):
 
     @tasks.loop(hours=24.0)
     async def check_for_birthdays(self):
-        print('looping')
         chan = self.get_announcements_chan_id()
         bdays = check_for_bdays_today()
         if bdays:
@@ -52,7 +51,6 @@ class BdayReminder(commands.Cog):
     
     @check_for_birthdays.before_loop
     async def before_printer(self):
-        print('waiting...')
         await bot.wait_until_ready()
 
 
@@ -124,8 +122,10 @@ async def handle_bday_delete(ctx):
 @bot.command(name='bday-list', help='Delete your submitted score')
 async def handle_bday_list(ctx):
     bdays = get_all_bdays()
+    bday_list_string = ""
     for bday in bdays:
-        print(bday)
+        bday_list_string += f"{bday[2]} : {bday[1]} \n"
+    await ctx.send(bday_list_string)
     return
 
 def main():
