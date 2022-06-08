@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, List
 
+import discord
 from discord.ext import commands, tasks
 
 # Globals
@@ -32,7 +33,7 @@ class BdayReminder(commands.Cog):
     def __init__(self):
         print("created")
         self.check_for_birthdays.start()
-    
+        
     @staticmethod
     def get_announcements_chan_id() -> id:
         for chan in bot.get_all_channels():
@@ -99,6 +100,9 @@ def delete_bday(bday : BirthdayEntry):
     cur.execute(delete_cmd,[bday.userid])
     db_con.commit()
 
+@bot.event
+async def on_ready():
+    await bot.change_presence(status=discord.Status.idle, activity=discord.Activity(type=discord.ActivityType.listening, name="to $help"))
 
 @bot.command(name='bday-add', help="Allows you to add your bday in format MM-DD or MM-DD")
 async def handle_bday_add(ctx):
