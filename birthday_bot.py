@@ -1,5 +1,6 @@
 # /bin/python3
 
+from collections import deque
 import datetime
 import logging
 import re
@@ -16,7 +17,10 @@ from discord.ext import commands, tasks
 # Globals
 TOKEN = Path('secret_token.txt').read_text()
 db_con = sqlite3.connect('birthdays.db')
-bot = commands.Bot(command_prefix='$')
+intents = discord.Intents.default()
+intents.members = True
+bot = commands.Bot(command_prefix='$', intents=intents)
+DEFAULT_VAL_NON_USER = -1
 
 # Helper functions and data types
 @dataclass
@@ -75,6 +79,23 @@ def parse_message(msg : str, command_key : str, userid : str, username: str) -> 
         result.date = date.strftime("%m/%d")
         return result
 
+def parse_message_bday_other(msg : str, userid : str, username : str) -> Optional[BirthdayEntry]:
+    print(msg)
+    m = re.search('\\$bday-add-other\s([A-z]+)\s([0-9][0-9][/,-,|][0-9][0-9])', msg)
+    if m is None:
+        return None
+    else:
+        result = BirthdayEntry()
+        date_string = m.group(2)
+        try:
+            date = datetime.datetime.strptime(date_string, '%m/%d')
+        except ValueError:
+            return None
+        result.userid = DEFAULT_VAL_NON_USER
+        result.username = str(m.group(1))
+        result.date = date.strftime("%m/%d")
+        return result
+
 def check_for_bdays_today() -> List[str]:
     cur = db_con.cursor()
     date = datetime.datetime.now().strftime("%m/%d")
@@ -84,7 +105,7 @@ def check_for_bdays_today() -> List[str]:
 
 def get_all_bdays() -> List[str]:
     cur = db_con.cursor()
-    check_cmd = 'SELECT * from birthday'
+    check_cmd = 'SELECT * from birthday ORDER BY date ASC'
     cur.execute(check_cmd)
     return cur.fetchall()
 
@@ -104,13 +125,24 @@ def delete_bday(bday : BirthdayEntry):
 async def on_ready():
     await bot.change_presence(status=discord.Status.idle, activity=discord.Activity(type=discord.ActivityType.listening, name="to $help"))
 
-@bot.command(name='bday-add', help="Allows you to add your bday in format MM-DD or MM-DD")
+@bot.command(name='bday-add', help="Allows you to add your bday in format MM/DD")
 async def handle_bday_add(ctx):
     # Note $ is a special character in python regex so it needs to be escaped
     res = parse_message(ctx.message.content, '\\$bday-add', ctx.message.author.id, ctx.message.author)
     if res is None:
         logging.info(f"Invalid message format: {ctx.message.content}")
-        await ctx.send("Error with bday message try again, must be `MM/DD or MM-DD` format and a valid date")
+        await ctx.send("Error with bday message try again, must be `MM/DD` format and a valid date")
+        return
+    else:
+        insert_bday(res)
+        await ctx.send(f"Bday recorded for {res.username} as {res.date}")
+
+@bot.command(name='bday-add-other', help="Allows you to add a non draper gang bday in format NAME MM/DD")
+async def handle_bday_add_other(ctx):
+    res = parse_message_bday_other(ctx.message.content, ctx.message.author.id, ctx.message.author)
+    if res is None:
+        logging.info(f"Invalid message format: {ctx.message.content}")
+        await ctx.send("Error with bday message try again, must be `NAME MM/DD` format and a valid date")
         return
     else:
         insert_bday(res)
@@ -126,9 +158,29 @@ async def handle_bday_delete(ctx):
 @bot.command(name='bday-list', help='See all channel birthdays')
 async def handle_bday_list(ctx):
     bdays = get_all_bdays()
-    bday_list_string = ""
+    cur_day = datetime.date.today()
+    past_list = []
+    up_list = []
+
     for bday in bdays:
-        bday_list_string += f"{bday[2]} : {bday[1]} \n"
+        bday_date = datetime.datetime.strptime(f"{bday[1]}/{datetime.date.today().year}",'%m/%d/%Y');
+        
+        guild = bot.get_guild(ctx.guild.id)
+        guild.fetch_members()
+        if(int(bday[0]) == -1):
+            display_name = bday[2]
+        else:
+            display_name = guild.get_member(int(bday[0])).nick
+            if display_name is None:
+                display_name = guild.get_member(int(bday[0])).name
+        if bday_date.date() < cur_day:
+            past_list.append(f"{display_name} : {bday[1]} \n")
+        else:
+            up_list.append(f"{display_name} : {bday[1]} \n")
+    bday_list = up_list + past_list
+
+    bday_list_string = ":birthday: Upcoming birthdays :birthday: \n" + "".join(bday_list)
+
     await ctx.send(bday_list_string)
     return
 
