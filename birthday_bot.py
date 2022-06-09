@@ -51,7 +51,10 @@ class BdayReminder(commands.Cog):
         if bdays:
             bday_string = ''
             for bday in bdays:
-                bday_string += f"Happy birthday <@{bday[0]}> :birthday: :partying_face: \n" 
+                if int(bday[0]) != -1:
+                    bday_string += f"Happy birthday <@{bday[0]}> :birthday: :partying_face: \n" 
+                else:
+                    bday_string += f"Happy birthday {bday[2]} :birthday: :partying_face: \n" 
             await chan.send(bday_string)
     
     @check_for_birthdays.before_loop
