@@ -1,0 +1,15 @@
+[Unit]
+Description=Discord Birthday Bot
+After=docker.service
+Requires=docker.service
+
+[Service]
+Restart=always
+ExecStartPre=-/usr/bin/docker stop birthday-discord
+ExecStartPre=-/usr/bin/docker rm birthday-discord
+ExecStartPre=/usr/bin/docker build -t birthday-discord /home/ubuntu/discord_birthday_bot
+ExecStart=/usr/bin/docker run --name birthday-discord -v /home/ubuntu/discord_birthday_bot/birthdays.db:/app/birthdays.db -v /home/ubuntu/discord_birthday_bot/secret_token.txt:/app/secret_token.txt  birthday-discord
+ExecStop=/usr/bin/docker stop birthday-discord
+
+[Install]
+WantedBy=multi-user.target
