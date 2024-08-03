@@ -7,8 +7,8 @@ Requires=docker.service
 Restart=always
 ExecStartPre=-/usr/bin/docker stop birthday-discord
 ExecStartPre=-/usr/bin/docker rm birthday-discord
-ExecStartPre=/usr/bin/docker build -t birthday-discord /home/ubuntu/discord_birthday_bot
-ExecStart=/usr/bin/docker run --name birthday-discord -v /home/ubuntu/discord_birthday_bot/birthdays.db:/app/birthdays.db -v /home/ubuntu/discord_birthday_bot/secret_token.txt:/app/secret_token.txt  birthday-discord
+ExecStartPre=/usr/bin/docker pull ghcr.io/drc0308/discord_birthday_bot:master
+ExecStart=/usr/bin/docker run --name birthday-discord -v /usr/local/birthday_bot/birthdays.db:/app/birthdays.db -v /etc/birthday_bot/secret_token.txt:/app/secret_token.txt ghcr.io/drc0308/discord_birthday_bot:master
 ExecStop=/usr/bin/docker stop birthday-discord
 
 [Install]
