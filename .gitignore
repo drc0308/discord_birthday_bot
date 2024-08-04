@@ -3,3 +3,5 @@
 secret_token.txt
 rasp_ipaddress.txt
 *.log
+__pycache__
+.pytest_cache
